@@ -79,8 +79,21 @@ async function doWork() {
     const momentoSequelizeClient = await modelCacheFactory(momentoClient, log);
 
     log.debug({ userId : 1 }, "Issuing a read for one user findByPk")
-    const UserFindPK = await momentoSequelizeClient.wrap(User).findByPk(1)
+    const UserFindPK = await momentoSequelizeClient.wrap(User).findByPk(1);
     log.debug({user: JSON.stringify(UserFindPK)}, "Found user: ");
+
+    if (UserFindPK) {
+        try {
+            await UserFindPK.save();
+        } catch (error) {
+            if (error instanceof TypeError) {
+                log.debug({message: error.message}, 'Expected TypeError');
+            } else {
+                throw error;
+            }
+        }
+    }
+
 
     log.debug({userName: 'Bob'}, "Issuing a read for one user findOne")
 
@@ -101,6 +114,7 @@ async function doWork() {
 
     const UserFindAll = await momentoSequelizeClient.wrap(User).findAll();
     log.debug({user: JSON.stringify(UserFindAll)}, "Found user: ");
+
 
 }
 
