@@ -4,10 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "test": "jest test",
-    "build": "tsc",
-    "lint": "eslint .",
-    "start": "tsc && node dist/src/client.js"
+    "build": "rm -rf dist && tsc"
   },
   "repository": {
     "type": "git",
