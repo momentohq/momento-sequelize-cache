@@ -38,7 +38,7 @@ export function buildCacheKey(type: string, model: any, userOptions: FindOptions
 
     try {
         const tableName = model.getTableName();
-        const cacheKey = ['rio:model-cacheclient', type, tableName, sequelizeUtilities(options)].join(':');
+        const cacheKey = ['model-cache', type, tableName, sequelizeUtilities(options)].join(':');
         logger.debug({ cacheKey, model: tableName, options }, `buildCacheKey returning key`);
         return cacheKey;
     } catch (err) {

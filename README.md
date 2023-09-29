@@ -115,7 +115,7 @@ There are 3 things this command will do:
 - It stores the result of the query in Momento using a custom cache key that mimics the sequelize query. For instance,
 the above `findByPk` query will translate to a cache key:
 
-`rio:model-cacheclient:findByPk:Users:{"where":{"id":1}}`
+`model-cache:findByPk:Users:{"where":{"id":1}}`
 
 Any future calls to the **same** query will result in a cache hit until the key expires.
 
