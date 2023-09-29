@@ -14,9 +14,10 @@ You can use Momento as your caching engine for any relational databases that are
 
 ## Prerequisites
 
-To use this library, you will need a Momento API key. You can generate one using the [Momento Console](https://console.gomomento.com/).
-
-The examples will utilize your API key via the environment variable `MOMENTO_API_KEY` you set.
+- To use this library, you will need a Momento API key. You can generate one using the [Momento Console](https://console.gomomento.com/).
+- The examples use two caches `Users` and `UserGroups` that you will need to create in your Momento account. You can create 
+them on the [console](https://console.gomomento.com/) as well! 
+- The examples will utilize your API key via the environment variable `MOMENTO_API_KEY` you set.
 
 
 ## Usage
@@ -94,26 +95,32 @@ You can find an example with more commands in our [examples directory](./example
 ## About the interface and mutating commands
 
 The wrapper or interface provides a wrapper over the below `sequelize` operations:
+The wrapper or interface provides a wrapper over the below `sequelize` operations:
 
-- findOne()
-- findByPK()
-- findAll()
-- select()
+- `findOne()`
+- `findByPK()`
+- `findAll()`
+- `count()`
 
-When you make a query using the interface, you need to provide your sequelize model, as:
+When you make a query using the interface, you need to provide your sequelize model, such as `User` in the below command:
 
 ```typescript
     const userFoundByPK = await momentoSequelizeClient.wrap(User).findByPk(1)
 ```
 
 There are 3 things this command will do:
-- First query the cache with a unique key for the command (more on this in a second)
-- If there's a cache miss, it queries the database using the sequelize model that you provided.
-- It stores the result of the query in Momento using a custom cache key that mimics the sequelize query. Any future 
-calls,  until the cache key's expiration, to the `same` query will result in a cache hit.
+- First query your Momento cache `Users` with an `id` (primary key) of `1`. Note that a Momento cache with the name
+`Users` should exist in your account.
+- If there's a cache miss, it queries your database with a table `Users` using the sequelize `Model` that you provided.
+- It stores the result of the query in Momento using a custom cache key that mimics the sequelize query. For instance,
+the above `findByPk` query will translate to a cache key:
 
-The return type of the calls is instance(s) of the sequelize model that matches the query. Sequelize models by default 
+`rio:model-cacheclient:findByPk:Users:{"where":{"id":1}}`
+
+Any future calls to the **same** query will result in a cache hit until the key expires.
+
+The return type of the call is one or more instances of the sequelize model that matches the query. Sequelize models by default 
 have commands such as `save()`, `destroy()`, `update()` that you'd potentially not want to be exposed from your returned 
-cache instance. Therefore, the returned type will only allow to access the attributes directly through the attributeName,
-such as `userFoundByPK.username` or `userFoundByPK.get('username')`. Any non existent attributes or a method other than `get()`
-will result in a `TypeError`.
+cache instance. Therefore, the returned type will only allow to access the attributes directly through an `attributeName`,
+such as `userFoundByPK.username` or through an accessor such as `userFoundByPK.get('username')`. 
+Any non-existent attributes or a method other than `get()` will result in a `TypeError`.

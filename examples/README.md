@@ -10,6 +10,8 @@
 - Node version 14 or higher is required
 - To use the examples, you will need a Momento API key. You can generate one using the [Momento Console](https://console.gomomento.com/). 
 The examples will utilize your API key via the environment variable `MOMENTO_API_KEY` you set.
+- The examples use two caches `Users` and `UserGroups` that you will need to create in your Momento account. You can create 
+them on the [console](https://console.gomomento.com/) as well!
 
 To run any of the examples you will need to install the dependencies once first:
 
