@@ -5,17 +5,12 @@ on:
       - main
 
 jobs:
-  verify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup repo
-        uses: actions/checkout@v3
 
   build:
     strategy:
       max-parallel: 2
       matrix:
-        node: [14, 16, 18]
+        node: [16, 18]
     name: Test on Node ${{ matrix.node }}
     runs-on: ubuntu-latest
 
