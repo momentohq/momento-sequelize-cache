@@ -11,17 +11,8 @@ jobs:
       - name: Setup repo
         uses: actions/checkout@v3
 
-      - name: Verify README generation
-        uses: momentohq/standards-and-practices/github-actions/oss-readme-template@gh-actions-v1
-        with:
-          project_status: official
-          project_stability: alpha
-          project_type: other
-  # This is a separate job from than the above because the container services
-  # do not run off the shelf on macos. This is a known issue with GitHub Actions.
   build:
     strategy:
-      # TODO the redis tests are flaky when run all in parallel.
       max-parallel: 2
       matrix:
         node: [14, 16, 18]
