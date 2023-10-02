@@ -1,7 +1,7 @@
 {
-  "name": "momento-sequelize-cache",
+  "name": "@gomomento-poc/momento-sequelize-cache",
   "version": "0.1.0",
-  "description": "",
+  "description": "Momento read-aside cache client for sequelize",
   "main": "dist/index.js",
   "scripts": {
     "build": "rm -rf dist && tsc"
