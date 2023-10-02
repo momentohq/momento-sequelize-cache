@@ -79,7 +79,7 @@ async function doWork() {
     const momentoSequelizeClient = await modelCacheFactory(momentoClient, log);
 
     log.debug({ userId : 1 }, "Issuing a read for one user findByPk")
-    const userFindPK = await momentoSequelizeClient.wrap(User).findByPk(1, {plain: true});
+    const userFindPK = await momentoSequelizeClient.wrap(User).findByPk(1, {raw: true});
     log.debug({details: userFindPK}, "Found user: ");
     log.debug({birthday: userFindPK.birthday}, "User birthday: ");
 

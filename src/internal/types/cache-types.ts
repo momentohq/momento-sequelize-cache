@@ -31,7 +31,7 @@ function toExtendedModelDataValues<T extends Sequelize.Model>(
 
     for (const key in attributes) {
         if (attributes.hasOwnProperty(key)) {
-            if (options?.plain === true) {
+            if (options?.plain === true || options?.raw == true) {
                 data[key as keyof ModelDataValues<T>] = (modelInstance as any)[key];
             } else {
                 data[key as keyof ModelDataValues<T>] = modelInstance.get(key as any);
