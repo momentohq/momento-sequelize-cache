@@ -132,9 +132,8 @@ export default class ModelCache implements IModelCache {
                 );
 
                 if (!result) return null;
-                if (options?.raw || options?.plain) return result;
 
-                return ReadOnlyModel(model, result);
+                return ReadOnlyModel(model, result, options);
             },
             findOne: async (options?: FindOptionsT<T, M>) => {
                 const result = await this.cachedCall<T, InstanceType<T> | null>(
@@ -144,10 +143,10 @@ export default class ModelCache implements IModelCache {
                     options,
                     cacheParams,
                 );
-                if (!result) return null;
-                if (options?.raw || options?.plain) return result;
 
-                return ReadOnlyModel(model, result);
+                if (!result) return null;
+
+                return ReadOnlyModel(model, result, options);
             },
             findAll: async (options?: FindOptionsT<T, M>) => {
                 const result = await this.cachedCall<T, InstanceType<T>[]>(
@@ -158,9 +157,7 @@ export default class ModelCache implements IModelCache {
                     cacheParams,
                 );
 
-                if (options?.raw || options?.plain) return result;
-
-                return ReadOnlyModelArr(model, result).map(item => item as InstanceType<T>);
+                return ReadOnlyModelArr(model, result, options);
             },
             count: async (options?: FindOptionsT<T, M>) => {
                 return await this.cachedCall<T, number>(

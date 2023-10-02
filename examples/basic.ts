@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes } from 'sequelize';
+import {Sequelize, DataTypes} from 'sequelize';
 import { Configurations, CredentialProvider } from "@gomomento/sdk";
 import { MomentoClientGenerator } from "../src/cacheclient/momento/momento-client-generator";
 import { LoggerFactory } from "../src/logger/logger-factory";
@@ -21,7 +21,7 @@ const userSchema = {
     accountBalance: DataTypes.FLOAT,
 };
 
-const User = sequelize.define("User", userSchema);
+const User = sequelize.define('User', userSchema);
 
 const userGroupSchema = {group: DataTypes.STRING,
     UserId: {
@@ -79,12 +79,13 @@ async function doWork() {
     const momentoSequelizeClient = await modelCacheFactory(momentoClient, log);
 
     log.debug({ userId : 1 }, "Issuing a read for one user findByPk")
-    const UserFindPK = await momentoSequelizeClient.wrap(User).findByPk(1);
-    log.debug({user: JSON.stringify(UserFindPK)}, "Found user: ");
+    const userFindPK = await momentoSequelizeClient.wrap(User).findByPk(1, {plain: true});
+    log.debug({details: userFindPK}, "Found user: ");
+    log.debug({birthday: userFindPK.birthday}, "User birthday: ");
 
-    if (UserFindPK) {
+    if (userFindPK) {
         try {
-            await UserFindPK.save();
+            await userFindPK.save();
         } catch (error) {
             if (error instanceof TypeError) {
                 log.debug({message: error.message}, 'Expected TypeError');
