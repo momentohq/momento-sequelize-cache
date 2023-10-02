@@ -1,8 +1,8 @@
 import {Sequelize, DataTypes} from 'sequelize';
 import { Configurations, CredentialProvider } from "@gomomento/sdk";
-import { MomentoClientGenerator } from "../src";
-import { LoggerFactory } from "../src";
-import { modelCacheFactory } from "../src";
+import { MomentoClientGenerator } from "@gomomento-poc/momento-sequelize-cache";
+import { LoggerFactory } from "@gomomento-poc/momento-sequelize-cache";
+import { modelCacheFactory } from "@gomomento-poc/momento-sequelize-cache";
 
 const sequelize = new Sequelize({ dialect: 'sqlite'});
 
