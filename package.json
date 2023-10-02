@@ -1,22 +1,14 @@
 {
-  "name": "momento-sequelize-poc",
-  "version": "1.0.0",
+  "name": "momento-sequelize-cache",
+  "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
     "build": "rm -rf dist && tsc"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pratik151192/momento-sequelize-poc.git"
-  },
   "keywords": [],
   "author": "",
   "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/pratik151192/momento-sequelize-poc/issues"
-  },
-  "homepage": "https://github.com/pratik151192/momento-sequelize-poc#readme",
   "devDependencies": {
     "@types/jest": "^29.5.4",
     "@types/lodash": "^4.14.198",
