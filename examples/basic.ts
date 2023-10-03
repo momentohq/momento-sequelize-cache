@@ -1,5 +1,5 @@
 import {Sequelize, DataTypes} from 'sequelize';
-import { Configurations, CredentialProvider } from "@gomomento/sdk";
+import {CacheClient, Configurations, CreateCache, CredentialProvider, DeleteCache} from "@gomomento/sdk";
 import { MomentoClientGenerator } from "@gomomento-poc/momento-sequelize-cache";
 import { LoggerFactory } from "@gomomento-poc/momento-sequelize-cache";
 import { modelCacheFactory } from "@gomomento-poc/momento-sequelize-cache";
@@ -49,6 +49,13 @@ async function insertUserInGroup(UserId: number, group: string) {
 
 async function doWork() {
 
+    const client = await CacheClient.create({
+        configuration: Configurations.Laptop.latest(),
+        credentialProvider: CredentialProvider.fromEnvironmentVariable({environmentVariableName: 'MOMENTO_API_KEY'}),
+        defaultTtlSeconds: 60,
+    });
+
+    await createCaches(client);
 
     await User.sync({force: true});
     await UserGroup.sync({force: true});
@@ -116,7 +123,29 @@ async function doWork() {
     const UserFindAll = await momentoSequelizeClient.wrap(User).findAll();
     log.debug({user: JSON.stringify(UserFindAll)}, "Found user: ");
 
+    await deleteCaches(client);
+}
 
+async function createCaches(client: CacheClient) {
+    const createUsers = await client.createCache('Users');
+    if (createUsers instanceof CreateCache.Error) {
+        throw new Error("Error creating cache Users " + createUsers.message())
+    }
+    const createUserGroups = await client.createCache('UserGroups');
+    if (createUserGroups instanceof CreateCache.Error) {
+        throw new Error("Error creating cache UserGroups " + createUserGroups.message())
+    }
+}
+
+async function deleteCaches(client: CacheClient) {
+    const deleteUsers = await client.deleteCache('Users');
+    if (deleteUsers instanceof DeleteCache.Error) {
+        throw new Error("Error creating cache Users " + deleteUsers.message());
+    }
+    const deleteUserGroups = await client.deleteCache('UserGroups');
+    if (deleteUserGroups instanceof DeleteCache.Error) {
+        throw new Error("Error creating cache UserGroups " + deleteUserGroups.message());
+    }
 }
 
 doWork().catch(console.error);
