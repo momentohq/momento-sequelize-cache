@@ -69,15 +69,18 @@ async function doWork() {
     await insertUser('user2', birthday, age, isActive, accountBalance);
 
     // prepare momento model cache client
-    const momentoClient = MomentoClientGenerator.getInstance({
+    // pass {forceCreateCache: true} if want to force create caches
+   // pass modelCacheName for a cache name else it defaults to model-cache
+  const momentoClient = MomentoClientGenerator.getInstance({
         configuration: Configurations.Laptop.latest(),
         credentialProvider: CredentialProvider.fromEnvironmentVariable({environmentVariableName: 'MOMENTO_API_KEY'}),
+        forceCreateCache: true,
+        modelCacheName: "my-model-cache",
         defaultTtlSeconds: 60,
     });
 
     const log = LoggerFactory.createLogger({ logLevel: 'debug' })
-    // pass {forceCreateCache: true} if want to force create caches
-    const momentoSequelizeClient = await modelCacheFactory(momentoClient, log, {forceCreateCache: true} );
+    const momentoSequelizeClient = await modelCacheFactory(momentoClient, log);
 
     log.debug({ userId : 1 }, "Issuing a read for one user findByPk")
     const UserFoundByPK = await momentoSequelizeClient.wrap(User).findByPk(1)
