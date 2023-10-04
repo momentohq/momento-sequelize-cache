@@ -15,26 +15,20 @@ import {ICacheClient} from "./cacheclient/cache-client";
 import {ILogger} from "./logger/logger-factory";
 import {ModelCacheOptions} from "./model-cache-factory";
 
-
 export default class ModelCache implements IModelCache {
     private cacheClient: ICacheClient;  // Specify the type of cacheClient
     private log: ILogger;
-    private forceCreateCache: boolean
 
     private constructor(cacheClient: ICacheClient,
-                        logger: ILogger,
-                        forceCreateCache: boolean) {
+                        logger: ILogger) {
        this.cacheClient = cacheClient;
        this.log = logger;
-       this.forceCreateCache = forceCreateCache;
     }
 
     public static async initializeCacheClient(clientGenerator: IClientGenerator,
-                                              logger: ILogger,
-                                              modelCacheOptions?: ModelCacheOptions): Promise<ModelCache> {
+                                              logger: ILogger): Promise<ModelCache> {
         const cacheClient = await clientGenerator.getClient();
-        return new ModelCache(cacheClient, logger, modelCacheOptions?.forceCreateCache ?
-                                                                        modelCacheOptions?.forceCreateCache : false);
+        return new ModelCache(cacheClient, logger);
     }
 
     private async cachedCall<T extends Sequelize.ModelStatic<Model>, R>(
@@ -59,10 +53,6 @@ export default class ModelCache implements IModelCache {
 
         const tableNameInfo = model.getTableName();
         const tableName = (typeof tableNameInfo === 'string') ? tableNameInfo : tableNameInfo.tableName;
-
-        if (this.forceCreateCache) {
-            await this.cacheClient.createCache(tableName);
-        }
 
         const existingData = await this.cacheClient.get(tableName, cacheKey);
 

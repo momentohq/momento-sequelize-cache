@@ -4,18 +4,19 @@ import {LoggerManager} from "../../logger/logger-manager";
 
 export class MomentoClient implements ICacheClient {
 
-    constructor(private client: CacheClient) {}
+    constructor(private client: CacheClient,
+                private cacheName: string) {}
 
     async get(tableName: string, cacheKey: string) {
         const log = LoggerManager.getLogger();
-        const getResponse =  await this.client.get(tableName, cacheKey);
+        const getResponse =  await this.client.get(this.cacheName, cacheKey);
 
         if (getResponse instanceof CacheGet.Error) {
-            log.error({cacheName: tableName}, `Error while retrieving from cache: ${getResponse.message()}`);
+            log.error({cacheName: this.cacheName, key: cacheKey, tableName: tableName}, `Error while retrieving from cache: ${getResponse.message()}`);
         } else if (getResponse instanceof CacheGet.Hit) {
-            log.debug({cacheName: tableName, key: cacheKey}, `Cache hit!`);
+            log.debug({cacheName: this.cacheName, key: cacheKey, tableName: tableName}, `Cache hit!`);
         } else if (getResponse instanceof CacheGet.Miss) {
-            log.debug({cacheName: tableName, key: cacheKey}, `Cache miss!`);
+            log.debug({cacheName: this.cacheName, key: cacheKey, tableName: tableName}, `Cache miss!`);
         }
 
         return getResponse;
@@ -24,12 +25,12 @@ export class MomentoClient implements ICacheClient {
     async set(tableName: string, cacheKey: string, data: string, options?: { ttl: number }) {
         const log = LoggerManager.getLogger();
 
-        const setResponse = await this.client.set(tableName, cacheKey, data, options);
+        const setResponse = await this.client.set(this.cacheName, cacheKey, data, options);
 
         if (setResponse instanceof CacheSet.Error) {
-            log.error({cacheName: tableName}, `Error while retrieving from cache: ${setResponse.message()}`);
+            log.error({cacheName: this.cacheName, key: cacheKey, tableName: tableName}, `Error while writing to cache: ${setResponse.message()}`);
         } else if (setResponse instanceof CacheSet.Success) {
-            log.debug({cacheName: tableName, key: cacheKey}, `Successfully set the item to Momento!`)
+            log.debug({cacheName: this.cacheName, key: cacheKey, tableName: tableName}, `Successfully set the item to Momento!`)
         }
 
         return setResponse;

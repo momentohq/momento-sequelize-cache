@@ -73,10 +73,12 @@ async function doWork() {
         configuration: Configurations.Laptop.latest(),
         credentialProvider: CredentialProvider.fromEnvironmentVariable({environmentVariableName: 'MOMENTO_API_KEY'}),
         defaultTtlSeconds: 60,
+        modelCacheName: "my-model-cache",
+        forceCreateCache: true
     });
 
     const log = LoggerFactory.createLogger({ logLevel: 'debug' })
-    const momentoSequelizeClient = await modelCacheFactory(momentoClient, log, {forceCreateCache: true} );
+    const momentoSequelizeClient = await modelCacheFactory(momentoClient, log);
 
     const userFindPKRaw = await momentoSequelizeClient.wrap(User).findByPk(1);
     log.debug({details: userFindPKRaw.username}, "Found user with name: ");

@@ -15,7 +15,7 @@ You can use Momento as your caching engine for any relational databases that are
 ## Prerequisites
 
 - To use this library, you will need a Momento API key. You can generate one using the [Momento Console](https://console.gomomento.com/).
-- The examples use two caches `Users` and `UserGroups` that you will need to create in your Momento account. You can create 
+- The examples use a cache `model-cache` that you will need to create in your Momento account. You can create 
 them on the [console](https://console.gomomento.com/) as well! 
   - As an alternative, you can pass a flag while instantiating our caching wrapper (see snippet below).
 - The examples will utilize your API key via the environment variable `MOMENTO_API_KEY` you set.
@@ -69,15 +69,18 @@ async function doWork() {
     await insertUser('user2', birthday, age, isActive, accountBalance);
 
     // prepare momento model cache client
-    const momentoClient = MomentoClientGenerator.getInstance({
+    // pass {forceCreateCache: true} if want to force create caches
+   // pass modelCacheName for a cache name else it defaults to model-cache
+  const momentoClient = MomentoClientGenerator.getInstance({
         configuration: Configurations.Laptop.latest(),
         credentialProvider: CredentialProvider.fromEnvironmentVariable({environmentVariableName: 'MOMENTO_API_KEY'}),
+        forceCreateCache: true,
+        modelCacheName: "my-model-cache",
         defaultTtlSeconds: 60,
     });
 
     const log = LoggerFactory.createLogger({ logLevel: 'debug' })
-    // pass {forceCreateCache: true} if want to force create caches
-    const momentoSequelizeClient = await modelCacheFactory(momentoClient, log, {forceCreateCache: true} );
+    const momentoSequelizeClient = await modelCacheFactory(momentoClient, log);
 
     log.debug({ userId : 1 }, "Issuing a read for one user findByPk")
     const UserFoundByPK = await momentoSequelizeClient.wrap(User).findByPk(1)
