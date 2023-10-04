@@ -12,6 +12,8 @@
 The examples will utilize your API key via the environment variable `MOMENTO_API_KEY` you set.
 - The examples use two caches `Users` and `UserGroups` that you will need to create in your Momento account. You can create 
 them on the [console](https://console.gomomento.com/) as well!
+    - As an alternative, you can pass a flag while instantiating our caching wrapper, which the examples already do
+      to make it easy for you.
 
 To run any of the examples you will need to install the dependencies once first:
 
