@@ -7,7 +7,9 @@ export const VALID_SEQUELIZE_FIND_OPTIONS = [
     'raw',
     'plain',
     'include',
-    'transaction'
+    'transaction',
+    'order',
+    'group'
 ] as const;
 
 export type FindOptionsT<T extends ModelStatic<Model>, M extends InstanceType<T>> = Pick<

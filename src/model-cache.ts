@@ -13,22 +13,28 @@ import {CacheGet, CacheSet} from "@gomomento/sdk";
 import _ from "lodash";
 import {ICacheClient} from "./cacheclient/cache-client";
 import {ILogger} from "./logger/logger-factory";
+import {ModelCacheOptions} from "./model-cache-factory";
 
 
 export default class ModelCache implements IModelCache {
     private cacheClient: ICacheClient;  // Specify the type of cacheClient
     private log: ILogger;
+    private forceCreateCache: boolean
 
     private constructor(cacheClient: ICacheClient,
-                        logger: ILogger) {
+                        logger: ILogger,
+                        forceCreateCache: boolean) {
        this.cacheClient = cacheClient;
        this.log = logger;
+       this.forceCreateCache = forceCreateCache;
     }
 
     public static async initializeCacheClient(clientGenerator: IClientGenerator,
-                                              logger: ILogger): Promise<ModelCache> {
+                                              logger: ILogger,
+                                              modelCacheOptions?: ModelCacheOptions): Promise<ModelCache> {
         const cacheClient = await clientGenerator.getClient();
-        return new ModelCache(cacheClient, logger);
+        return new ModelCache(cacheClient, logger, modelCacheOptions?.forceCreateCache ?
+                                                                        modelCacheOptions?.forceCreateCache : false);
     }
 
     private async cachedCall<T extends Sequelize.ModelStatic<Model>, R>(
@@ -53,26 +59,41 @@ export default class ModelCache implements IModelCache {
 
         const tableNameInfo = model.getTableName();
         const tableName = (typeof tableNameInfo === 'string') ? tableNameInfo : tableNameInfo.tableName;
+
+        if (this.forceCreateCache) {
+            await this.cacheClient.createCache(tableName);
+        }
+
         const existingData = await this.cacheClient.get(tableName, cacheKey);
 
         // this works for Momento
         if (existingData instanceof CacheGet.Hit) {
-            const loadedData = JSON.parse(existingData.valueString());
-
             if (existingData.valueString() === null || existingData.valueString() === 'undefined') {
                 // for findOne/findByPk that return null
                 return null as any; // TODO: how to properly return this type?
             }
+
+            const loadedData = JSON.parse(existingData.valueString());
+
             if (options.raw || options.plain) {
                 return loadedData;
             } else {
                 if (_.isArray(loadedData)) {
 
-                    return loadedData.map((d: any) => (model as any).build(d, {isNewRecord: false})) as any; // FIXME: remove need for 'any' here
+                    return loadedData.map((d: any) => {
+                        const builtModel = (model as any).build(d, {isNewRecord: false})
+                        // case where aliasing was used and the model doesn't have those attributes
+                        this.injectMissingData(d, builtModel);
+                        return builtModel;
+                    }) as any; // FIXME: remove need for 'any' here
                 }
-                return (model as any).build(loadedData, {isNewRecord: false});
+                const builtModel = (model as any).build(loadedData, {isNewRecord: false});
+                // case where aliasing was used and the model doesn't have those attributes
+                this.injectMissingData(loadedData, builtModel)
+                return builtModel
             }
         }
+
 
         const results = await generator();
 
@@ -102,16 +123,18 @@ export default class ModelCache implements IModelCache {
         const data = getData(results)
 
         if (data !== undefined) {
-            const resp = await this.cacheClient
-                .set(tableName, cacheKey, data, {ttl: cacheParams?.ttl});
-
-            if (resp instanceof CacheSet.Error) {
-                throw resp;
-            }
+            await this.cacheClient.set(tableName, cacheKey, data, {ttl: cacheParams?.ttl});
         }
 
-
         return results;
+    }
+
+    private injectMissingData(loadedData: any, builtModel: any) {
+        for (let key in loadedData) {
+            if (!builtModel.dataValues[key]) {
+                builtModel.setDataValue(key, loadedData[key]);
+            }
+        }
     }
 
     wrap<T extends Sequelize.ModelStatic<Model>, M extends InstanceType<T>>(
@@ -149,7 +172,7 @@ export default class ModelCache implements IModelCache {
                 return ReadOnlyModel(model, result, options);
             },
             findAll: async (options?: FindOptionsT<T, M>) => {
-                const result = await this.cachedCall<T, InstanceType<T>[]>(
+                let result = await this.cachedCall<T, InstanceType<T>[]>(
                     'findAll',
                     () => model.findAll(options),
                     model,

@@ -6,9 +6,14 @@ import ModelCache from "./model-cache";
 import {ILogger} from "./logger/logger-factory";
 import {LoggerManager} from "./logger/logger-manager";
 
+export type ModelCacheOptions = {
+    forceCreateCache: boolean
+}
+
 export async function modelCacheFactory(
     clientGenerator: IClientGenerator,
-    logger?: ILogger
+    logger?: ILogger,
+    modelCacheOptions?: ModelCacheOptions
 ) {
 
     if (logger) {
@@ -18,7 +23,7 @@ export async function modelCacheFactory(
     const loggerInstance = LoggerManager.getLogger();
 
     // Create an instance of the ModelCache class
-    const modelCache = await ModelCache.initializeCacheClient(clientGenerator, loggerInstance);
+    const modelCache = await ModelCache.initializeCacheClient(clientGenerator, loggerInstance, modelCacheOptions);
 
     const factory: IModelCache = {
         ...({
