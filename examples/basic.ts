@@ -1,5 +1,5 @@
 import {Sequelize, DataTypes} from 'sequelize';
-import {CacheClient, Configurations, CreateCache, CredentialProvider, DeleteCache} from "@gomomento/sdk";
+import {Configurations, CredentialProvider} from "@gomomento/sdk";
 import { MomentoClientGenerator } from "@gomomento-poc/momento-sequelize-cache";
 import { LoggerFactory } from "@gomomento-poc/momento-sequelize-cache";
 import { modelCacheFactory } from "@gomomento-poc/momento-sequelize-cache";
@@ -23,7 +23,8 @@ const userSchema = {
 
 const User = sequelize.define('User', userSchema);
 
-const userGroupSchema = {group: DataTypes.STRING,
+const userGroupSchema = {
+    group: DataTypes.STRING,
     UserId: {
         type: DataTypes.INTEGER,
         references: {
@@ -49,18 +50,10 @@ async function insertUserInGroup(UserId: number, group: string) {
 
 async function doWork() {
 
-    const client = await CacheClient.create({
-        configuration: Configurations.Laptop.latest(),
-        credentialProvider: CredentialProvider.fromEnvironmentVariable({environmentVariableName: 'MOMENTO_API_KEY'}),
-        defaultTtlSeconds: 60,
-    });
-
-    await createCaches(client);
-
     await User.sync({force: true});
     await UserGroup.sync({force: true});
 
-    const username = 'user2';
+    const username = 'Alexa';
     const birthday = new Date(Date.UTC(1992, 5, 21));
     const age = 29;
     const isActive = true;
@@ -70,9 +63,9 @@ async function doWork() {
     // primarily as a read-aside cache
     await insertUser(username, birthday, age, isActive, accountBalance);
     await insertUserInGroup(1, "yellow");
-    await insertUser('user3', birthday, age, isActive, accountBalance);
+    await insertUser('Taylor', birthday, age, false, accountBalance);
     await insertUserInGroup(2, "green");
-    await insertUser('user20', birthday, age, isActive, accountBalance);
+    await insertUser('Adam', birthday, age, isActive, accountBalance);
     await insertUserInGroup(3, "green");
 
     // prepare momento model cache client
@@ -83,16 +76,26 @@ async function doWork() {
     });
 
     const log = LoggerFactory.createLogger({ logLevel: 'debug' })
-    const momentoSequelizeClient = await modelCacheFactory(momentoClient, log);
+    const momentoSequelizeClient = await modelCacheFactory(momentoClient, log, {forceCreateCache: true} );
 
-    log.debug({ userId : 1 }, "Issuing a read for one user findByPk")
-    const userFindPK = await momentoSequelizeClient.wrap(User).findByPk(1, {raw: true});
-    log.debug({details: userFindPK}, "Found user: ");
-    log.debug({birthday: userFindPK.birthday}, "User birthday: ");
+    const userFindPKRaw = await momentoSequelizeClient.wrap(User).findByPk(1);
+    log.debug({details: userFindPKRaw.username}, "Found user with name: ");
 
-    if (userFindPK) {
+
+    const userFindPKAliased = await momentoSequelizeClient.wrap(User).findByPk(2, {
+        attributes: [
+            // aliasing
+            [Sequelize.col('username'), 'uName'],
+        ],
+        plain: true
+    });
+
+    log.debug({details: userFindPKAliased.uName}, "Found user with name: ");
+
+
+    if (userFindPKAliased) {
         try {
-            await userFindPK.save();
+            await userFindPKAliased.save();
         } catch (error) {
             if (error instanceof TypeError) {
                 log.debug({message: error.message}, 'Expected TypeError');
@@ -101,9 +104,6 @@ async function doWork() {
             }
         }
     }
-
-
-    log.debug({userName: 'Bob'}, "Issuing a read for one user findOne")
 
     const UserFindOneInGroup = await momentoSequelizeClient.wrap(UserGroup).findOne({
         include: [
@@ -118,34 +118,26 @@ async function doWork() {
         ]
     });
 
-    log.debug({user: JSON.stringify(UserFindOneInGroup)}, "Found user: ");
+    log.debug({user: UserFindOneInGroup.UserId, group: UserFindOneInGroup.group}, "Found user with group: ");
 
-    const UserFindAll = await momentoSequelizeClient.wrap(User).findAll();
-    log.debug({user: JSON.stringify(UserFindAll)}, "Found user: ");
+    const UserFindAllSorted = await momentoSequelizeClient.wrap(User).findAll({ order: [
+        ['username', 'DESC'],
+    ],});
 
-    await deleteCaches(client);
-}
+    log.debug({ user1: UserFindAllSorted[0].username, user2: UserFindAllSorted[1].username,
+        user3: UserFindAllSorted[2].username}, "Found users sorted desc: ");
 
-async function createCaches(client: CacheClient) {
-    const createUsers = await client.createCache('Users');
-    if (createUsers instanceof CreateCache.Error) {
-        throw new Error("Error creating cache Users " + createUsers.message())
-    }
-    const createUserGroups = await client.createCache('UserGroups');
-    if (createUserGroups instanceof CreateCache.Error) {
-        throw new Error("Error creating cache UserGroups " + createUserGroups.message())
-    }
-}
+    const UserFindAllGroupedCount = await momentoSequelizeClient.wrap(User).findAll({
+        attributes: ['isActive', [sequelize.fn('COUNT', sequelize.col('id')), 'userCount']],
+        group: ['isActive'],
+        raw: true
 
-async function deleteCaches(client: CacheClient) {
-    const deleteUsers = await client.deleteCache('Users');
-    if (deleteUsers instanceof DeleteCache.Error) {
-        throw new Error("Error creating cache Users " + deleteUsers.message());
-    }
-    const deleteUserGroups = await client.deleteCache('UserGroups');
-    if (deleteUserGroups instanceof DeleteCache.Error) {
-        throw new Error("Error creating cache UserGroups " + deleteUserGroups.message());
-    }
+    });
+
+    // @ts-ignore
+    log.debug({ state1: `isActive:${UserFindAllGroupedCount[0].isActive},count:${UserFindAllGroupedCount[0].userCount}`,
+        state2: `isActive:${UserFindAllGroupedCount[1].isActive},count:${UserFindAllGroupedCount[1].userCount}`},
+        "Found users grouped by `isActive` with counts: ");
 }
 
 doWork().catch(console.error);

@@ -1,4 +1,4 @@
-import {CacheClient, CacheGet} from '@gomomento/sdk';
+import {CacheClient, CacheGet, CacheSet, CreateCache} from '@gomomento/sdk';
 import { ICacheClient } from '../cache-client';
 import {LoggerManager} from "../../logger/logger-manager";
 
@@ -12,6 +12,8 @@ export class MomentoClient implements ICacheClient {
 
         if (getResponse instanceof CacheGet.Error) {
             log.error({cacheName: tableName}, `Error while retrieving from cache: ${getResponse.message()}`);
+        } else if (getResponse instanceof CacheGet.Hit) {
+            log.debug({cacheName: tableName, key: cacheKey}, `Cache hit!`);
         } else if (getResponse instanceof CacheGet.Miss) {
             log.debug({cacheName: tableName, key: cacheKey}, `Cache miss!`);
         }
@@ -24,10 +26,26 @@ export class MomentoClient implements ICacheClient {
 
         const setResponse = await this.client.set(tableName, cacheKey, data, options);
 
-        if (setResponse instanceof CacheGet.Error) {
+        if (setResponse instanceof CacheSet.Error) {
             log.error({cacheName: tableName}, `Error while retrieving from cache: ${setResponse.message()}`);
+        } else if (setResponse instanceof CacheSet.Success) {
+            log.debug({cacheName: tableName, key: cacheKey}, `Successfully set the item to Momento!`)
         }
 
         return setResponse;
+    }
+
+    async createCache(cacheName: string) {
+        const log = LoggerManager.getLogger();
+
+        const createCache = await this.client.createCache(cacheName);
+
+        if (createCache instanceof CreateCache.Error) {
+            log.error({cacheName: cacheName}, `Error while creating cache: ${createCache.message()}`)
+        } else if (createCache instanceof CreateCache.AlreadyExists) {
+            log.debug({cacheName: cacheName}, `Cache already exists!`)
+        } else if (createCache instanceof CreateCache.Success) {
+            log.debug({cacheName: cacheName}, `Cache created successfully!`)
+        }
     }
 }
