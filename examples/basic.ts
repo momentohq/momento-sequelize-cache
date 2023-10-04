@@ -78,7 +78,7 @@ async function doWork() {
     const log = LoggerFactory.createLogger({ logLevel: 'debug' })
     const momentoSequelizeClient = await modelCacheFactory(momentoClient, log, {forceCreateCache: true} );
 
-    const userFindPKRaw = await momentoSequelizeClient.wrap(User).findByPk(1, {plain: true});
+    const userFindPKRaw = await momentoSequelizeClient.wrap(User).findByPk(1);
     log.debug({details: userFindPKRaw.username}, "Found user with name: ");
 
 
@@ -115,15 +115,13 @@ async function doWork() {
                     id: 1
                 }
             }
-        ],
-        plain: true
+        ]
     });
 
     log.debug({user: UserFindOneInGroup.UserId, group: UserFindOneInGroup.group}, "Found user with group: ");
 
     const UserFindAllSorted = await momentoSequelizeClient.wrap(User).findAll({ order: [
         ['username', 'DESC'],
-
     ],});
 
     log.debug({ user1: UserFindAllSorted[0].username, user2: UserFindAllSorted[1].username,
