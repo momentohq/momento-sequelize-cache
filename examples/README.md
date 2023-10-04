@@ -10,7 +10,7 @@
 - Node version 14 or higher is required
 - To use the examples, you will need a Momento API key. You can generate one using the [Momento Console](https://console.gomomento.com/). 
 The examples will utilize your API key via the environment variable `MOMENTO_API_KEY` you set.
-- The examples use two caches `Users` and `UserGroups` that you will need to create in your Momento account. You can create 
+- The examples use a cache `model-cache` that you will need to create in your Momento account. You can create 
 them on the [console](https://console.gomomento.com/) as well!
     - As an alternative, you can pass a flag while instantiating our caching wrapper, which the examples already do
       to make it easy for you.
