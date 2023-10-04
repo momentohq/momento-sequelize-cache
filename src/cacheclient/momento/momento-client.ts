@@ -9,7 +9,7 @@ export class MomentoClient implements ICacheClient {
 
     async get(tableName: string, cacheKey: string) {
         const log = LoggerManager.getLogger();
-        const getResponse =  await this.client.get("model-cache", cacheKey);
+        const getResponse =  await this.client.get(this.cacheName, cacheKey);
 
         if (getResponse instanceof CacheGet.Error) {
             log.error({cacheName: this.cacheName, key: cacheKey, tableName: tableName}, `Error while retrieving from cache: ${getResponse.message()}`);
@@ -25,7 +25,7 @@ export class MomentoClient implements ICacheClient {
     async set(tableName: string, cacheKey: string, data: string, options?: { ttl: number }) {
         const log = LoggerManager.getLogger();
 
-        const setResponse = await this.client.set("model-cache", cacheKey, data, options);
+        const setResponse = await this.client.set(this.cacheName, cacheKey, data, options);
 
         if (setResponse instanceof CacheSet.Error) {
             log.error({cacheName: this.cacheName, key: cacheKey, tableName: tableName}, `Error while writing to cache: ${setResponse.message()}`);
