@@ -58,12 +58,26 @@ export default class ModelCache implements IModelCache {
 
         // this works for Momento
         if (existingData instanceof CacheGet.Hit) {
-            if (existingData.valueString() === null || existingData.valueString() === 'undefined') {
-                // for findOne/findByPk that return null
-                return null as any; // TODO: how to properly return this type?
+            const valueString = existingData.valueString();
+
+            if (type === 'count') {
+                const result = parseInt(valueString, 10);
+                if (isNaN(result)) {
+                  return 0 as R;
+                }
+                return result as R;
             }
 
-            const loadedData = JSON.parse(existingData.valueString());
+            if (valueString === 'null' || valueString === 'undefined' || valueString === '') {
+                if (type === 'findAll') {
+                    return [] as R;
+                } else {
+                    // for findOne/findByPk that return null
+                    return null as R;
+                }
+            }
+
+            const loadedData = JSON.parse(valueString);
 
             if (options.raw || options.plain) {
                 return loadedData;
