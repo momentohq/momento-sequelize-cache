@@ -13,22 +13,27 @@ import {CacheGet, CacheSet} from "@gomomento/sdk";
 import _ from "lodash";
 import {ICacheClient} from "./cacheclient/cache-client";
 import {ILogger} from "./logger/logger-factory";
-import {ModelCacheOptions} from "./model-cache-factory";
+import * as zlib from "zlib";
+import {CompressionType} from "./model-cache-factory";
 
 export default class ModelCache implements IModelCache {
     private cacheClient: ICacheClient;  // Specify the type of cacheClient
     private log: ILogger;
+    private compressionType: CompressionType
 
     private constructor(cacheClient: ICacheClient,
-                        logger: ILogger) {
+                        logger: ILogger,
+                        compressionType: CompressionType) {
        this.cacheClient = cacheClient;
        this.log = logger;
+       this.compressionType = compressionType;
     }
 
     public static async initializeCacheClient(clientGenerator: IClientGenerator,
-                                              logger: ILogger): Promise<ModelCache> {
+                                              logger: ILogger,
+                                              compressionType: CompressionType): Promise<ModelCache> {
         const cacheClient = await clientGenerator.getClient();
-        return new ModelCache(cacheClient, logger);
+        return new ModelCache(cacheClient, logger, compressionType);
     }
 
     private async cachedCall<T extends Sequelize.ModelStatic<Model>, R>(
@@ -58,7 +63,8 @@ export default class ModelCache implements IModelCache {
 
         // this works for Momento
         if (existingData instanceof CacheGet.Hit) {
-            const valueString = existingData.valueString();
+            // if we have other cache backends, keep the decompress here but make this not Momento specific ..
+            const valueString = this.deCompress(existingData)
 
             if (type === 'count') {
                 const result = parseInt(valueString, 10);
@@ -124,13 +130,31 @@ export default class ModelCache implements IModelCache {
                 : JSON.stringify(results.get());
         }
 
-        const data = getData(results)
+        const data = this.compress(getData(results))
 
         if (data !== undefined) {
             await this.cacheClient.set(tableName, cacheKey, data, {ttl: cacheParams?.ttl});
         }
 
         return results;
+    }
+
+    private compress(data: string) {
+        switch (this.compressionType) {
+            case CompressionType.NONE:
+                return data;
+            case CompressionType.ZLIB:
+                return zlib.gzipSync(data);
+        }
+    }
+
+    private deCompress(data: CacheGet.Hit) {
+        switch (this.compressionType) {
+            case CompressionType.NONE:
+                return data.valueString();
+            case CompressionType.ZLIB:
+                return zlib.gunzipSync(data.valueUint8Array()).toString();
+        }
     }
 
     private injectMissingData(loadedData: any, builtModel: any) {
