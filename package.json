@@ -29,6 +29,7 @@
     "@gomomento/sdk": "^1.35.0",
     "lodash": "4.17.21",
     "sequelize": "^6.32.1",
-    "sqlite3": "^5.1.6"
+    "sqlite3": "^5.1.6",
+    "@mongodb-js/zstd": "^1.2.0"
   }
 }

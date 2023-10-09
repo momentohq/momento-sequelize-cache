@@ -1,8 +1,11 @@
-import {Sequelize, DataTypes} from 'sequelize';
+import {DataTypes, Sequelize} from 'sequelize';
 import {Configurations, CredentialProvider} from "@gomomento/sdk";
-import { MomentoClientGenerator } from "@gomomento-poc/momento-sequelize-cache";
-import { LoggerFactory } from "@gomomento-poc/momento-sequelize-cache";
-import { modelCacheFactory } from "@gomomento-poc/momento-sequelize-cache";
+import {
+    CompressionType,
+    LoggerFactory,
+    modelCacheFactory,
+    MomentoClientGenerator
+} from "@gomomento-poc/momento-sequelize-cache";
 
 const sequelize = new Sequelize({ dialect: 'sqlite'});
 
@@ -78,7 +81,9 @@ async function doWork() {
     });
 
     const log = LoggerFactory.createLogger({ logLevel: 'debug' })
-    const momentoSequelizeClient = await modelCacheFactory(momentoClient, log);
+    const momentoSequelizeClient = await modelCacheFactory(momentoClient, {
+        logger: log, compressionType: CompressionType.ZLIB
+    });
 
     const userFindPKRaw = await momentoSequelizeClient.wrap(User).findByPk(1);
     log.debug({details: userFindPKRaw.username}, "Found user with name: ");
