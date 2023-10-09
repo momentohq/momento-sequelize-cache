@@ -14,6 +14,7 @@ import _ from "lodash";
 import {ICacheClient} from "./cacheclient/cache-client";
 import {ILogger} from "./logger/logger-factory";
 import * as zlib from "zlib";
+import { compress as mongoCompress, decompress as mongoDecompress } from '@mongodb-js/zstd';
 import {CompressionType} from "./model-cache-factory";
 
 export default class ModelCache implements IModelCache {
@@ -64,7 +65,7 @@ export default class ModelCache implements IModelCache {
         // this works for Momento
         if (existingData instanceof CacheGet.Hit) {
             // if we have other cache backends, keep the decompress here but make this not Momento specific ..
-            const valueString = this.deCompress(existingData)
+            const valueString = await this.deCompress(existingData)
 
             if (type === 'count') {
                 const result = parseInt(valueString, 10);
@@ -130,7 +131,7 @@ export default class ModelCache implements IModelCache {
                 : JSON.stringify(results.get());
         }
 
-        const data = this.compress(getData(results))
+        const data = await this.compress(getData(results))
 
         if (data !== undefined) {
             await this.cacheClient.set(tableName, cacheKey, data, {ttl: cacheParams?.ttl});
@@ -139,21 +140,29 @@ export default class ModelCache implements IModelCache {
         return results;
     }
 
-    private compress(data: string) {
+    private async compress(data: string) {
         switch (this.compressionType) {
             case CompressionType.NONE:
                 return data;
             case CompressionType.ZLIB:
                 return zlib.gzipSync(data);
+            case CompressionType.ZSTD:
+                return await mongoCompress(Buffer.from(data));
+            default:
+                throw new Error(`Invalid compression algorithm`);
         }
     }
 
-    private deCompress(data: CacheGet.Hit) {
+    private async deCompress(data: CacheGet.Hit) {
         switch (this.compressionType) {
             case CompressionType.NONE:
                 return data.valueString();
             case CompressionType.ZLIB:
                 return zlib.gunzipSync(data.valueUint8Array()).toString();
+            case CompressionType.ZSTD:
+                return (await mongoDecompress(Buffer.from(data.valueUint8Array()))).toString();
+            default:
+                throw new Error(`Invalid compression algorithm`);
         }
     }
 

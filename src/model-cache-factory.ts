@@ -13,7 +13,8 @@ export type ModelCacheOptions = {
 
 export enum CompressionType {
     NONE,
-    ZLIB
+    ZLIB,
+    ZSTD
 }
 
 export async function modelCacheFactory(
