@@ -22,7 +22,7 @@ export class MomentoClient implements ICacheClient {
         return getResponse;
     }
 
-    async set(tableName: string, cacheKey: string, data: string, options?: { ttl: number }) {
+    async set(tableName: string, cacheKey: string, data: string | Buffer, options?: { ttl: number }) {
         const log = LoggerManager.getLogger();
 
         const setResponse = await this.client.set(this.cacheName, cacheKey, data, options);

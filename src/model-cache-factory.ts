@@ -7,23 +7,29 @@ import {ILogger} from "./logger/logger-factory";
 import {LoggerManager} from "./logger/logger-manager";
 
 export type ModelCacheOptions = {
-    cacheName?: string,
-    forceCreateCache: boolean
+    logger?: ILogger,
+    compressionType?: CompressionType
+}
+
+export enum CompressionType {
+    NONE,
+    ZLIB
 }
 
 export async function modelCacheFactory(
     clientGenerator: IClientGenerator,
-    logger?: ILogger
+    options?: ModelCacheOptions,
 ) {
 
-    if (logger) {
-        LoggerManager.setLogger(logger);
+    if (options?.logger) {
+        LoggerManager.setLogger(options?.logger);
     }
 
     const loggerInstance = LoggerManager.getLogger();
 
     // Create an instance of the ModelCache class
-    const modelCache = await ModelCache.initializeCacheClient(clientGenerator, loggerInstance);
+    const modelCache = await ModelCache.initializeCacheClient(clientGenerator, loggerInstance,
+        options?.compressionType ? options?.compressionType : CompressionType.NONE);
 
     const factory: IModelCache = {
         ...({
