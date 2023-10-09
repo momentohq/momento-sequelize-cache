@@ -82,7 +82,7 @@ async function doWork() {
 
     const log = LoggerFactory.createLogger({ logLevel: 'debug' })
     const momentoSequelizeClient = await modelCacheFactory(momentoClient, {
-        logger: log, compressionType: CompressionType.ZLIB
+        logger: log, compressionType: CompressionType.ZSTD
     });
 
     const userFindPKRaw = await momentoSequelizeClient.wrap(User).findByPk(1);
