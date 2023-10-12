@@ -23,6 +23,11 @@ export class MomentoClientGenerator implements IClientGenerator {
         return this.instance;
     }
 
+    // incase customers want a new instance for multiple different caches
+    static newInstance(props: MomentoClientGeneratorProps): MomentoClientGenerator {
+        return new MomentoClientGenerator(props);
+    }
+
     async getClient(): Promise<MomentoClient> {
         if (this.#client === null) {
             const cacheClient = await CacheClient.create(this.props);
