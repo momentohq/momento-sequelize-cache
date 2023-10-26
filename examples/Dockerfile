@@ -18,6 +18,6 @@ WORKDIR /
 
 COPY . .
 
-RUN npm install
+RUN npm ci
 
 ENTRYPOINT ["npm", "run", "basic"]
