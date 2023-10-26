@@ -1,23 +1,20 @@
-FROM --platform=linux/amd64 public.ecr.aws/amazonlinux/amazonlinux:2023
+# Use the official Node.js image as the base image
+FROM node:16
 
-# Install development tools
-RUN yum update -y \
-    && yum install -y which unzip tree make jq tar gzip shadow-utils git gcc gcc-c++ cmake3 clang-devel python3 python3-pip zip procps pkgconfig \
-    && yum install openssl openssl-devel -y \
-    && yum groupinstall "Development Tools" -y
+# Set the working directory inside the container
+WORKDIR /usr/src/app
 
-# Install node
-RUN mkdir -p software/node \
-    && cd software/node \
-    && yum install https://rpm.nodesource.com/pub_20.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y \
-    && yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1 \
-    && npm install -g ts-node@10.4.0
+# Copy package.json and package-lock.json to the container
+COPY package*.json ./
 
-
-WORKDIR /
-
-COPY . .
-
+# Install the project dependencies
 RUN npm ci
 
-ENTRYPOINT ["npm", "run", "basic"]
+# Copy the rest of the application code (including tsconfig and basic.ts) to the container
+COPY . .
+
+# Compile the TypeScript code to JavaScript
+RUN npm run build
+
+# Set the command to run your TypeScript script
+CMD [ "node", "dist/basic.js" ]
