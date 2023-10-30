@@ -105,7 +105,6 @@ export default class ModelCache implements IModelCache {
             }
         }
 
-
         const results = await generator();
 
         function getData(data: any) {
