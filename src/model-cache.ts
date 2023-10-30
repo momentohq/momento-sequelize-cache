@@ -105,11 +105,10 @@ export default class ModelCache implements IModelCache {
             }
         }
 
-
         const results = await generator();
 
         function getData(data: any) {
-            if (results === null) {
+            if (data === null) {
                 return 'null'; // JSON stringified "null"
             }
 
@@ -117,22 +116,21 @@ export default class ModelCache implements IModelCache {
                 return JSON.stringify(data);
             }
 
-            if (!results) {
-                return results;
-            }
-
-            if (typeof results === 'number') {
+            if (typeof data === 'number') {
                 // like for count() calls
-                return results.toString();
+                return data.toString();
             }
 
-            return _.isArray(results)
-                ? JSON.stringify(results.map((r: any) => (r === null ? r : r.get())))
-                : JSON.stringify(results.get());
+            if (data === undefined) {
+                return data;
+            }
+
+            return _.isArray(data)
+                ? JSON.stringify(data.map((r: any) => (r === null ? r : r.get())))
+                : JSON.stringify(data.get());
         }
 
         const data = await this.compress(getData(results))
-
         if (data !== undefined) {
             await this.cacheClient.set(tableName, cacheKey, data, {ttl: cacheParams?.ttl});
         }

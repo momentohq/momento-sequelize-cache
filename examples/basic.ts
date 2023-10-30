@@ -76,8 +76,6 @@ async function doWork() {
         configuration: Configurations.Laptop.latest(),
         credentialProvider: CredentialProvider.fromEnvironmentVariable({environmentVariableName: 'MOMENTO_API_KEY'}),
         defaultTtlSeconds: 60,
-        modelCacheName: "my-model-cache",
-        forceCreateCache: true
     });
 
     const log = LoggerFactory.createLogger({ logLevel: 'debug' })

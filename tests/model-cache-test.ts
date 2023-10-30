@@ -213,6 +213,55 @@ describe("ModelCache Tests", () => {
         const cacheGet = await cacheClient.get(CACHE_NAME.concat("-compressed"),
             'model-cache:findByPk:UserModels:{\"where\":{\"id\":2}}');
         expect(cacheGet).toBeInstanceOf(CacheGet.Hit);
+
+
+
+    });
+
+    it("compression test cache misses", async () => {
+        let compressedDataCache = await modelCacheFactory(
+            MomentoClientGenerator.newInstance({
+                configuration: Configurations.Laptop.latest(),
+                credentialProvider: CredentialProvider.fromEnvironmentVariable({environmentVariableName: 'MOMENTO_API_KEY'}),
+                defaultTtlSeconds: 60,
+                modelCacheName: CACHE_NAME.concat("-compressed"),
+                forceCreateCache: true
+            }), {logger: LoggerFactory.createLogger({logLevel: 'debug'}),
+                compressionType: CompressionType.ZLIB});
+
+        // find
+
+        let user = await compressedDataCache.wrap(UserModel).findOne({
+            where: {
+                // @ts-ignore
+                name: 'Alaexa'
+            }
+        });
+        expect(user).toEqual(null);
+        // calling again for cache interaction
+        user = await compressedDataCache.wrap(UserModel).findOne({
+            where: {
+                // @ts-ignore
+                name: 'Alaexa'
+            }
+        });
+        expect(user).toEqual(null);
+        // count
+        let ct = await compressedDataCache.wrap(UserModel).count({
+            where: {
+                // @ts-ignore
+                name: 'Alaeaaaaaxa'
+            }
+        });
+        expect(ct).toEqual(0);
+        // calling again for cache interaction
+        ct = await compressedDataCache.wrap(UserModel).count({
+            where: {
+                // @ts-ignore
+                name: 'Alaeaaaaaxa'
+            }
+        });
+        expect(ct).toEqual(0);
     });
 
     it("findAll sorted ASC returns both users cache hit and miss", async () => {
