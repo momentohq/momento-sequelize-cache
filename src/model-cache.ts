@@ -122,7 +122,7 @@ export default class ModelCache implements IModelCache {
                 return data.toString();
             }
 
-            if (!data) {
+            if (data === undefined) {
                 return data;
             }
 
