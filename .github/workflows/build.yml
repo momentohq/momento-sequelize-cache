@@ -13,6 +13,8 @@ jobs:
         node: [16, 18]
     name: Test on Node ${{ matrix.node }}
     runs-on: ubuntu-latest
+    env:
+      MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
 
     steps:
       - name: Setup repo
@@ -31,3 +33,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Test
+        run: npm run test
