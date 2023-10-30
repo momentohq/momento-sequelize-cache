@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@gomomento-poc/momento-sequelize-cache": "../gomomento-poc-momento-sequelize-cache-0.1.0.tgz"
+    "@gomomento-poc/momento-sequelize-cache": "0.3.0"
   }
 }
