@@ -71,13 +71,15 @@ async function doWork() {
     await insertUser('Adam', birthday, age, isActive, accountBalance);
     await insertUserInGroup(3, "green");
 
+    // forces lib to create a cache
+    const forceCreateCache = true
     // prepare momento model cache client
     const momentoClient = MomentoClientGenerator.getInstance({
         configuration: Configurations.Laptop.latest(),
         credentialProvider: CredentialProvider.fromEnvironmentVariable({environmentVariableName: 'MOMENTO_API_KEY'}),
         defaultTtlSeconds: 60,
         modelCacheName: "my-model-cache",
-        forceCreateCache: true
+        forceCreateCache: forceCreateCache
     });
 
     const log = LoggerFactory.createLogger({ logLevel: 'debug' })
