@@ -32,6 +32,6 @@
     "@gomomento/sdk": "^1.35.0",
     "lodash": "4.17.21",
     "sequelize": "^6.32.1",
-    "@mongodb-js/zstd": "^1.2.0"
+    "@mongodb-js/zstd": "^2.0.0"
   }
 }
