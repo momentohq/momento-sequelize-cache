@@ -73,7 +73,7 @@ async function doWork() {
 
     // prepare momento model cache client
     const momentoClient = MomentoClientGenerator.getInstance({
-        configuration: Configurations.Laptop.latest(),
+        configuration: Configurations.InRegion.Default.latest(),
         credentialProvider: CredentialProvider.fromEnvironmentVariable({environmentVariableName: 'MOMENTO_API_KEY'}),
         defaultTtlSeconds: 60,
     });
